@@ -85,3 +85,20 @@ export async function uploadDocument(
 export function getDocumentUrl(documentId: string): string {
 	return `${BASE}/documents/${documentId}/content`;
 }
+
+export async function exportConversation(conversationId: string): Promise<void> {
+	const res = await fetch(`${BASE}/conversations/${conversationId}/export`);
+	if (!res.ok) {
+		const text = await res.text().catch(() => "Unknown error");
+		throw new Error(`Export failed: ${text}`);
+	}
+	const blob = await res.blob();
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement("a");
+	a.href = url;
+	const disposition = res.headers.get("content-disposition");
+	const match = disposition?.match(/filename="(.+?)"/);
+	a.download = match?.[1] ?? "conversation.docx";
+	a.click();
+	URL.revokeObjectURL(url);
+}

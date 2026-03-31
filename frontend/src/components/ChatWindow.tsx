@@ -1,5 +1,6 @@
-import { Loader2 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Download, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { exportConversation } from "../lib/api";
 import type { ContextSnippet, Message } from "../types";
 import { ChatInput } from "./ChatInput";
 import { EmptyState } from "./EmptyState";
@@ -35,6 +36,8 @@ export function ChatWindow({
 	onClearContext,
 }: ChatWindowProps) {
 	const scrollRef = useRef<HTMLDivElement>(null);
+	const [exporting, setExporting] = useState(false);
+	const [exportError, setExportError] = useState<string | null>(null);
 
 	// Auto-scroll to bottom when new messages arrive or during streaming
 	const messagesLength = messages.length;
@@ -44,6 +47,30 @@ export function ChatWindow({
 			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
 		}
 	}, [messagesLength, streamingContent]);
+
+	const exportErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const handleExport = useCallback(async () => {
+		if (!conversationId || exporting) return;
+		if (exportErrorTimerRef.current) {
+			clearTimeout(exportErrorTimerRef.current);
+			exportErrorTimerRef.current = null;
+		}
+		try {
+			setExporting(true);
+			setExportError(null);
+			await exportConversation(conversationId);
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : "Export failed";
+			setExportError(msg);
+			exportErrorTimerRef.current = setTimeout(() => {
+				setExportError(null);
+				exportErrorTimerRef.current = null;
+			}, 5000);
+		} finally {
+			setExporting(false);
+		}
+	}, [conversationId, exporting]);
 
 	// No conversation selected
 	if (!conversationId) {
@@ -96,6 +123,27 @@ export function ChatWindow({
 
 	return (
 		<div className="flex flex-1 flex-col bg-white">
+			{/* Toolbar */}
+			<div className="flex items-center justify-end border-b border-neutral-100 px-4 py-1.5">
+				{exportError && (
+					<p className="mr-3 text-xs text-red-500">{exportError}</p>
+				)}
+				<button
+					type="button"
+					onClick={handleExport}
+					disabled={exporting || streaming}
+					className="flex items-center gap-1.5 rounded px-2 py-1 text-xs text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 disabled:opacity-40"
+					title="Export conversation to Word"
+				>
+					{exporting ? (
+						<Loader2 className="h-3.5 w-3.5 animate-spin" />
+					) : (
+						<Download className="h-3.5 w-3.5" />
+					)}
+					{exportError ? "Retry" : "Export"}
+				</button>
+			</div>
+
 			{error && (
 				<div className="mx-4 mt-2 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
 					{error}
