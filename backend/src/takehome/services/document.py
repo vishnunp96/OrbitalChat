@@ -113,6 +113,10 @@ async def get_documents_for_conversation(
     session: AsyncSession, conversation_id: str
 ) -> list[Document]:
     """Get all documents for a conversation."""
-    stmt = select(Document).where(Document.conversation_id == conversation_id).order_by(Document.uploaded_at.asc())
+    stmt = (
+        select(Document)
+        .where(Document.conversation_id == conversation_id)
+        .order_by(Document.uploaded_at.asc())
+    )
     result = await session.execute(stmt)
     return list(result.scalars().all())

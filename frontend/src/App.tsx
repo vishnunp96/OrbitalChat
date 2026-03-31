@@ -36,12 +36,15 @@ export default function App() {
 
 	const [contextSnippets, setContextSnippets] = useState<ContextSnippet[]>([]);
 
-	const handleAddContext = useCallback((snippet: Omit<ContextSnippet, "id">) => {
-		setContextSnippets((prev) => [
-			...prev,
-			{ ...snippet, id: crypto.randomUUID() },
-		]);
-	}, []);
+	const handleAddContext = useCallback(
+		(snippet: Omit<ContextSnippet, "id">) => {
+			setContextSnippets((prev) => [
+				...prev,
+				{ ...snippet, id: crypto.randomUUID() },
+			]);
+		},
+		[],
+	);
 
 	const handleRemoveContext = useCallback((id: string) => {
 		setContextSnippets((prev) => prev.filter((s) => s.id !== id));
@@ -110,10 +113,7 @@ export default function App() {
 					onClearContext={handleClearContext}
 				/>
 
-				<DocumentViewer
-					documents={documents}
-					onAddContext={handleAddContext}
-				/>
+				<DocumentViewer documents={documents} onAddContext={handleAddContext} />
 			</div>
 		</TooltipProvider>
 	);

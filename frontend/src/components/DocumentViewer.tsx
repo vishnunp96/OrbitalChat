@@ -132,10 +132,13 @@ export function DocumentViewer({
 	// Re-run search when new pages finish rendering
 	useEffect(() => {
 		if (searchQuery && numPages > 0) {
-			const timer = setTimeout(() => runSearch(searchQuery, currentMatch - 1), 150);
+			const timer = setTimeout(
+				() => runSearch(searchQuery, currentMatch - 1),
+				150,
+			);
 			return () => clearTimeout(timer);
 		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [numPages]);
 
 	// Ctrl+F / Cmd+F to open search
@@ -154,7 +157,7 @@ export function DocumentViewer({
 	// Clear search when switching documents
 	useEffect(() => {
 		closeSearch();
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedIndex]);
 
 	const handleSearchChange = useCallback(
