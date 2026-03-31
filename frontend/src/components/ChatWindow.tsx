@@ -1,6 +1,6 @@
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef } from "react";
-import type { Message } from "../types";
+import type { ContextSnippet, Message } from "../types";
 import { ChatInput } from "./ChatInput";
 import { EmptyState } from "./EmptyState";
 import { MessageBubble, StreamingBubble } from "./MessageBubble";
@@ -13,8 +13,11 @@ interface ChatWindowProps {
 	streamingContent: string;
 	hasDocument: boolean;
 	conversationId: string | null;
+	contextSnippets: ContextSnippet[];
 	onSend: (content: string) => void;
 	onUpload: (file: File) => void;
+	onRemoveContext: (id: string) => void;
+	onClearContext: () => void;
 }
 
 export function ChatWindow({
@@ -25,8 +28,11 @@ export function ChatWindow({
 	streamingContent,
 	hasDocument,
 	conversationId,
+	contextSnippets,
 	onSend,
 	onUpload,
+	onRemoveContext,
+	onClearContext,
 }: ChatWindowProps) {
 	const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -80,6 +86,9 @@ export function ChatWindow({
 					onSend={onSend}
 					onUpload={onUpload}
 					disabled={streaming}
+					contextSnippets={contextSnippets}
+					onRemoveContext={onRemoveContext}
+					onClearContext={onClearContext}
 				/>
 			</div>
 		);
@@ -106,6 +115,9 @@ export function ChatWindow({
 				onSend={onSend}
 				onUpload={onUpload}
 				disabled={streaming}
+				contextSnippets={contextSnippets}
+				onRemoveContext={onRemoveContext}
+				onClearContext={onClearContext}
 			/>
 		</div>
 	);

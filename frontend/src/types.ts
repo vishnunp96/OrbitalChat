@@ -26,3 +26,10 @@ export interface Document {
 export interface ConversationDetail extends Conversation {
 	documents: Document[];
 }
+
+export interface ContextSnippet {
+	id: string;
+	text: string;
+	documentName: string;
+	page: number;
+}
