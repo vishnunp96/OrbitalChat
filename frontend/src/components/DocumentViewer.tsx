@@ -1,11 +1,10 @@
-import { ChevronLeft, ChevronRight, FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document as PDFDocument, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { getDocumentUrl } from "../lib/api";
 import type { Document } from "../types";
-import { Button } from "./ui/button";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	"pdfjs-dist/build/pdf.worker.min.mjs",
@@ -23,18 +22,14 @@ interface DocumentViewerProps {
 export function DocumentViewer({ documents }: DocumentViewerProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [numPages, setNumPages] = useState<number>(0);
-	const [currentPage, setCurrentPage] = useState(1);
-	const [pdfLoading, setPdfLoading] = useState(true);
 	const [pdfError, setPdfError] = useState<string | null>(null);
 	const [width, setWidth] = useState(DEFAULT_WIDTH);
 	const [dragging, setDragging] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 
-	// Reset page when switching documents
+	// Reset when switching documents
 	useEffect(() => {
-		setCurrentPage(1);
 		setNumPages(0);
-		setPdfLoading(true);
 		setPdfError(null);
 	}, [selectedIndex]);
 
@@ -147,7 +142,7 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
 				</div>
 			)}
 
-			{/* PDF content */}
+			{/* PDF content — continuous scroll */}
 			<div className="flex-1 overflow-y-auto p-4">
 				{pdfError && (
 					<div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
@@ -160,12 +155,10 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
 					file={pdfUrl}
 					onLoadSuccess={({ numPages: pages }) => {
 						setNumPages(pages);
-						setPdfLoading(false);
 						setPdfError(null);
 					}}
 					onLoadError={(error) => {
 						setPdfError(`Failed to load PDF: ${error.message}`);
-						setPdfLoading(false);
 					}}
 					loading={
 						<div className="flex items-center justify-center py-12">
@@ -173,46 +166,24 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
 						</div>
 					}
 				>
-					{!pdfLoading && !pdfError && (
-						<Page
-							pageNumber={currentPage}
-							width={pdfPageWidth}
-							loading={
-								<div className="flex items-center justify-center py-12">
-									<Loader2 className="h-5 w-5 animate-spin text-neutral-300" />
-								</div>
-							}
-						/>
-					)}
+					{Array.from({ length: numPages }, (_, i) => (
+						<div key={i + 1} className="mb-3 last:mb-0">
+							<Page
+								pageNumber={i + 1}
+								width={pdfPageWidth}
+								loading={
+									<div
+										style={{ width: pdfPageWidth, height: pdfPageWidth * 1.414 }}
+										className="flex items-center justify-center bg-neutral-50"
+									>
+										<Loader2 className="h-5 w-5 animate-spin text-neutral-300" />
+									</div>
+								}
+							/>
+						</div>
+					))}
 				</PDFDocument>
 			</div>
-
-			{/* Page navigation */}
-			{numPages > 0 && (
-				<div className="flex items-center justify-center gap-3 border-t border-neutral-100 px-4 py-2.5">
-					<Button
-						variant="ghost"
-						size="icon"
-						className="h-7 w-7"
-						disabled={currentPage <= 1}
-						onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-					>
-						<ChevronLeft className="h-4 w-4" />
-					</Button>
-					<span className="text-xs text-neutral-500">
-						Page {currentPage} of {numPages}
-					</span>
-					<Button
-						variant="ghost"
-						size="icon"
-						className="h-7 w-7"
-						disabled={currentPage >= numPages}
-						onClick={() => setCurrentPage((p) => Math.min(numPages, p + 1))}
-					>
-						<ChevronRight className="h-4 w-4" />
-					</Button>
-				</div>
-			)}
 		</div>
 	);
 }
