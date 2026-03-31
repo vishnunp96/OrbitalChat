@@ -103,22 +103,20 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
 			{/* Header */}
 			<div className="border-b border-neutral-100 px-4 pt-3 pb-0">
 				{documents.length > 1 ? (
-					<div className="flex gap-1 overflow-x-auto pb-0">
+					<div className="flex gap-1">
 						{documents.map((doc, i) => (
 							<button
 								key={doc.id}
 								type="button"
 								onClick={() => setSelectedIndex(i)}
-								className={`flex-shrink-0 rounded-t-md border border-b-0 px-3 py-1.5 text-xs font-medium transition-colors ${
+								className={`min-w-0 flex-1 rounded-t-md border border-b-0 px-3 py-1.5 text-xs font-medium transition-colors ${
 									i === selectedIndex
 										? "border-neutral-200 bg-white text-neutral-800"
 										: "border-transparent bg-neutral-100 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700"
 								}`}
 								title={doc.filename}
 							>
-								<span className="max-w-[120px] truncate block">
-									{doc.filename}
-								</span>
+								<span className="truncate block">{doc.filename}</span>
 							</button>
 						))}
 					</div>
