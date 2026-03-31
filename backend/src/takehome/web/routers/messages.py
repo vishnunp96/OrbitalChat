@@ -14,7 +14,7 @@ from starlette.responses import StreamingResponse
 from takehome.db.models import Message
 from takehome.db.session import get_session
 from takehome.services.conversation import get_conversation, update_conversation
-from takehome.services.document import get_document_for_conversation
+from takehome.services.document import get_documents_for_conversation
 from takehome.services.llm import chat_with_document, count_sources_cited, generate_title
 
 logger = structlog.get_logger()
@@ -106,9 +106,16 @@ async def send_message(
 
     logger.info("User message saved", conversation_id=conversation_id, message_id=user_message.id)
 
-    # Load document text for the conversation
-    document = await get_document_for_conversation(session, conversation_id)
-    document_text: str | None = document.extracted_text if document else None
+    # Load document text for the conversation (combine all documents)
+    documents = await get_documents_for_conversation(session, conversation_id)
+    if documents:
+        parts = []
+        for doc in documents:
+            if doc.extracted_text:
+                parts.append(f"=== Document: {doc.filename} ===\n{doc.extracted_text}")
+        document_text: str | None = "\n\n".join(parts) if parts else None
+    else:
+        document_text = None
 
     # Load conversation history (exclude the message we just saved, it will be the user_message param)
     stmt = (
