@@ -39,7 +39,7 @@ class ConversationDetail(BaseModel):
     created_at: datetime
     updated_at: datetime
     has_document: bool
-    document: DocumentInfo | None = None
+    documents: list[DocumentInfo] = []
 
     model_config = {"from_attributes": True}
 
@@ -96,7 +96,7 @@ async def create_conversation_endpoint(
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
         has_document=False,
-        document=None,
+        documents=[],
     )
 
 
@@ -105,28 +105,28 @@ async def get_conversation_endpoint(
     conversation_id: str,
     session: AsyncSession = Depends(get_session),
 ) -> ConversationDetail:
-    """Get a single conversation with its document info."""
+    """Get a single conversation with its documents info."""
     conversation = await get_conversation(session, conversation_id)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    doc_info: DocumentInfo | None = None
-    if conversation.documents:
-        doc = conversation.documents[0]
-        doc_info = DocumentInfo(
+    docs_info = [
+        DocumentInfo(
             id=doc.id,
             filename=doc.filename,
             page_count=doc.page_count,
             uploaded_at=doc.uploaded_at,
         )
+        for doc in conversation.documents
+    ]
 
     return ConversationDetail(
         id=conversation.id,
         title=conversation.title,
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
-        has_document=doc_info is not None,
-        document=doc_info,
+        has_document=len(docs_info) > 0,
+        documents=docs_info,
     )
 
 
@@ -141,23 +141,23 @@ async def update_conversation_endpoint(
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    doc_info: DocumentInfo | None = None
-    if conversation.documents:
-        doc = conversation.documents[0]
-        doc_info = DocumentInfo(
+    docs_info = [
+        DocumentInfo(
             id=doc.id,
             filename=doc.filename,
             page_count=doc.page_count,
             uploaded_at=doc.uploaded_at,
         )
+        for doc in conversation.documents
+    ]
 
     return ConversationDetail(
         id=conversation.id,
         title=conversation.title,
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
-        has_document=doc_info is not None,
-        document=doc_info,
+        has_document=len(docs_info) > 0,
+        documents=docs_info,
     )
 
 
