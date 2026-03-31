@@ -165,7 +165,7 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
 					}
 				>
 					{Array.from({ length: numPages }, (_, i) => (
-						<div key={i + 1} className="mb-3 last:mb-0">
+						<div key={i + 1} className="mb-4 last:mb-0">
 							<Page
 								pageNumber={i + 1}
 								width={pdfPageWidth}
@@ -178,6 +178,9 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
 									</div>
 								}
 							/>
+							<p className="mt-1.5 text-center text-[11px] text-neutral-400 select-none">
+								{i + 1} / {numPages}
+							</p>
 						</div>
 					))}
 				</PDFDocument>
