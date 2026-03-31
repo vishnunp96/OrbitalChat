@@ -4,7 +4,7 @@ import { Document as PDFDocument, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { getDocumentUrl } from "../lib/api";
-import type { Document } from "../types";
+import type { ContextSnippet, Document } from "../types";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	"pdfjs-dist/build/pdf.worker.min.mjs",
@@ -17,20 +17,29 @@ const DEFAULT_WIDTH = 400;
 
 interface DocumentViewerProps {
 	documents: Document[];
+	onAddContext?: (snippet: Omit<ContextSnippet, "id">) => void;
 }
 
-export function DocumentViewer({ documents }: DocumentViewerProps) {
+export function DocumentViewer({ documents, onAddContext }: DocumentViewerProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [numPages, setNumPages] = useState<number>(0);
 	const [pdfError, setPdfError] = useState<string | null>(null);
 	const [width, setWidth] = useState(DEFAULT_WIDTH);
 	const [dragging, setDragging] = useState(false);
+	const [selectionPos, setSelectionPos] = useState<{
+		x: number;
+		y: number;
+		text: string;
+		page: number;
+	} | null>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const addBtnRef = useRef<HTMLButtonElement>(null);
 
 	// Reset when switching documents
 	useEffect(() => {
 		setNumPages(0);
 		setPdfError(null);
+		setSelectionPos(null);
 	}, [selectedIndex]);
 
 	// Keep selectedIndex in bounds when documents change
@@ -40,7 +49,50 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
 		}
 	}, [documents, selectedIndex]);
 
-	const handleMouseDown = useCallback(
+	const handleMouseUp = useCallback(() => {
+		if (!onAddContext) return;
+		const selection = window.getSelection();
+		if (!selection || selection.isCollapsed) return;
+		const text = selection.toString().trim();
+		if (!text || !containerRef.current) return;
+
+		const range = selection.getRangeAt(0);
+		if (!containerRef.current.contains(range.commonAncestorContainer)) return;
+
+		// Walk up from the start of the selection to find the data-page attribute
+		let node: Node | null = range.startContainer;
+		let page = 1;
+		while (node && node !== containerRef.current) {
+			if (node instanceof Element) {
+				const p = node.getAttribute("data-page");
+				if (p) {
+					page = Number.parseInt(p, 10);
+					break;
+				}
+			}
+			node = node.parentNode;
+		}
+
+		const rect = range.getBoundingClientRect();
+		const containerRect = containerRef.current.getBoundingClientRect();
+		setSelectionPos({
+			text,
+			page,
+			x: Math.min(
+				Math.max(rect.left + rect.width / 2 - containerRect.left, 64),
+				containerRect.width - 64,
+			),
+			y: rect.top - containerRect.top,
+		});
+	}, [onAddContext]);
+
+	// Hide button when clicking anywhere that isn't the button itself
+	const handleMouseDown = useCallback((e: React.MouseEvent) => {
+		if (addBtnRef.current?.contains(e.target as Node)) return;
+		setSelectionPos(null);
+	}, []);
+
+	const handleResizeMouseDown = useCallback(
 		(e: React.MouseEvent) => {
 			e.preventDefault();
 			setDragging(true);
@@ -69,7 +121,7 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
 		[width],
 	);
 
-	const pdfPageWidth = width - 48; // account for px-4 padding on each side
+	const pdfPageWidth = width - 48;
 
 	if (documents.length === 0) {
 		return (
@@ -91,14 +143,43 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
 			ref={containerRef}
 			style={{ width }}
 			className="relative flex h-full flex-shrink-0 flex-col border-l border-neutral-200 bg-white"
+			onMouseUp={handleMouseUp}
+			onMouseDown={handleMouseDown}
 		>
 			{/* Resize handle */}
 			<div
 				className={`absolute top-0 left-0 z-10 h-full w-1.5 cursor-col-resize transition-colors hover:bg-neutral-300 ${
 					dragging ? "bg-neutral-400" : ""
 				}`}
-				onMouseDown={handleMouseDown}
+				onMouseDown={handleResizeMouseDown}
 			/>
+
+			{/* Floating "Add to context" button */}
+			{selectionPos && onAddContext && (
+				<button
+					ref={addBtnRef}
+					type="button"
+					style={{
+						left: selectionPos.x,
+						top: Math.max(selectionPos.y - 36, 8),
+						transform: "translateX(-50%)",
+					}}
+					className="absolute z-30 rounded-md bg-neutral-900 px-2.5 py-1 text-xs font-medium text-white shadow-lg hover:bg-neutral-700"
+					onMouseDown={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						onAddContext({
+							text: selectionPos.text,
+							documentName: document.filename,
+							page: selectionPos.page,
+						});
+						setSelectionPos(null);
+						window.getSelection()?.removeAllRanges();
+					}}
+				>
+					Add to context
+				</button>
+			)}
 
 			{/* Header */}
 			<div className="border-b border-neutral-100 px-4 pt-3 pb-0">
@@ -165,7 +246,7 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
 					}
 				>
 					{Array.from({ length: numPages }, (_, i) => (
-						<div key={i + 1} className="mb-4 last:mb-0">
+						<div key={i + 1} data-page={i + 1} className="mb-4 last:mb-0">
 							<Page
 								pageNumber={i + 1}
 								width={pdfPageWidth}

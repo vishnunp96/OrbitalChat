@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { ChatSidebar } from "./components/ChatSidebar";
 import { ChatWindow } from "./components/ChatWindow";
 import { DocumentViewer } from "./components/DocumentViewer";
@@ -6,6 +6,7 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { useConversations } from "./hooks/use-conversations";
 import { useDocument } from "./hooks/use-document";
 import { useMessages } from "./hooks/use-messages";
+import type { ContextSnippet } from "./types";
 
 export default function App() {
 	const {
@@ -28,10 +29,27 @@ export default function App() {
 	} = useMessages(selectedId);
 
 	const {
- 		documents,
+		documents,
 		upload,
 		refresh: refreshDocument,
 	} = useDocument(selectedId);
+
+	const [contextSnippets, setContextSnippets] = useState<ContextSnippet[]>([]);
+
+	const handleAddContext = useCallback((snippet: Omit<ContextSnippet, "id">) => {
+		setContextSnippets((prev) => [
+			...prev,
+			{ ...snippet, id: crypto.randomUUID() },
+		]);
+	}, []);
+
+	const handleRemoveContext = useCallback((id: string) => {
+		setContextSnippets((prev) => prev.filter((s) => s.id !== id));
+	}, []);
+
+	const handleClearContext = useCallback(() => {
+		setContextSnippets([]);
+	}, []);
 
 	const handleSend = useCallback(
 		async (content: string) => {
@@ -54,7 +72,16 @@ export default function App() {
 
 	const handleCreate = useCallback(async () => {
 		await create();
+		setContextSnippets([]);
 	}, [create]);
+
+	const handleSelect = useCallback(
+		(id: string) => {
+			select(id);
+			setContextSnippets([]);
+		},
+		[select],
+	);
 
 	return (
 		<TooltipProvider delayDuration={200}>
@@ -63,7 +90,7 @@ export default function App() {
 					conversations={conversations}
 					selectedId={selectedId}
 					loading={conversationsLoading}
-					onSelect={select}
+					onSelect={handleSelect}
 					onCreate={handleCreate}
 					onDelete={remove}
 				/>
@@ -76,11 +103,17 @@ export default function App() {
 					streamingContent={streamingContent}
 					hasDocument={documents.length > 0}
 					conversationId={selectedId}
+					contextSnippets={contextSnippets}
 					onSend={handleSend}
 					onUpload={handleUpload}
+					onRemoveContext={handleRemoveContext}
+					onClearContext={handleClearContext}
 				/>
 
-				<DocumentViewer documents={documents} />
+				<DocumentViewer
+					documents={documents}
+					onAddContext={handleAddContext}
+				/>
 			</div>
 		</TooltipProvider>
 	);
