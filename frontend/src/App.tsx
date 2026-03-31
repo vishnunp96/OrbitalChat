@@ -28,7 +28,7 @@ export default function App() {
 	} = useMessages(selectedId);
 
 	const {
-		document,
+ 		documents,
 		upload,
 		refresh: refreshDocument,
 	} = useDocument(selectedId);
@@ -74,13 +74,13 @@ export default function App() {
 					error={messagesError}
 					streaming={streaming}
 					streamingContent={streamingContent}
-					hasDocument={!!document}
+					hasDocument={documents.length > 0}
 					conversationId={selectedId}
 					onSend={handleSend}
 					onUpload={handleUpload}
 				/>
 
-				<DocumentViewer document={document} />
+				<DocumentViewer documents={documents} />
 			</div>
 		</TooltipProvider>
 	);

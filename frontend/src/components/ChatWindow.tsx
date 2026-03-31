@@ -80,7 +80,6 @@ export function ChatWindow({
 					onSend={onSend}
 					onUpload={onUpload}
 					disabled={streaming}
-					hasDocument={hasDocument}
 				/>
 			</div>
 		);
@@ -107,7 +106,6 @@ export function ChatWindow({
 				onSend={onSend}
 				onUpload={onUpload}
 				disabled={streaming}
-				hasDocument={hasDocument}
 			/>
 		</div>
 	);
