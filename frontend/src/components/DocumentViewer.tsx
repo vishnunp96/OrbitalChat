@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, FileText, Loader2 } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Document as PDFDocument, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -17,10 +17,11 @@ const MAX_WIDTH = 700;
 const DEFAULT_WIDTH = 400;
 
 interface DocumentViewerProps {
-	document: Document | null;
+	documents: Document[];
 }
 
-export function DocumentViewer({ document }: DocumentViewerProps) {
+export function DocumentViewer({ documents }: DocumentViewerProps) {
+	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [numPages, setNumPages] = useState<number>(0);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pdfLoading, setPdfLoading] = useState(true);
@@ -28,6 +29,21 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
 	const [width, setWidth] = useState(DEFAULT_WIDTH);
 	const [dragging, setDragging] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
+
+	// Reset page when switching documents
+	useEffect(() => {
+		setCurrentPage(1);
+		setNumPages(0);
+		setPdfLoading(true);
+		setPdfError(null);
+	}, [selectedIndex]);
+
+	// Keep selectedIndex in bounds when documents change
+	useEffect(() => {
+		if (documents.length > 0 && selectedIndex >= documents.length) {
+			setSelectedIndex(documents.length - 1);
+		}
+	}, [documents, selectedIndex]);
 
 	const handleMouseDown = useCallback(
 		(e: React.MouseEvent) => {
@@ -60,7 +76,7 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
 
 	const pdfPageWidth = width - 48; // account for px-4 padding on each side
 
-	if (!document) {
+	if (documents.length === 0) {
 		return (
 			<div
 				style={{ width }}
@@ -72,6 +88,7 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
 		);
 	}
 
+	const document = documents[selectedIndex] ?? documents[0];
 	const pdfUrl = getDocumentUrl(document.id);
 
 	return (
@@ -89,16 +106,46 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
 			/>
 
 			{/* Header */}
-			<div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
-				<div className="min-w-0">
-					<p className="truncate text-sm font-medium text-neutral-800">
-						{document.filename}
-					</p>
+			<div className="border-b border-neutral-100 px-4 pt-3 pb-0">
+				{documents.length > 1 ? (
+					<div className="flex gap-1 overflow-x-auto pb-0">
+						{documents.map((doc, i) => (
+							<button
+								key={doc.id}
+								type="button"
+								onClick={() => setSelectedIndex(i)}
+								className={`flex-shrink-0 rounded-t-md border border-b-0 px-3 py-1.5 text-xs font-medium transition-colors ${
+									i === selectedIndex
+										? "border-neutral-200 bg-white text-neutral-800"
+										: "border-transparent bg-neutral-100 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700"
+								}`}
+								title={doc.filename}
+							>
+								<span className="max-w-[120px] truncate block">
+									{doc.filename}
+								</span>
+							</button>
+						))}
+					</div>
+				) : (
+					<div className="pb-2">
+						<p className="truncate text-sm font-medium text-neutral-800">
+							{document.filename}
+						</p>
+						<p className="text-xs text-neutral-400">
+							{document.page_count} page{document.page_count !== 1 ? "s" : ""}
+						</p>
+					</div>
+				)}
+			</div>
+
+			{documents.length > 1 && (
+				<div className="border-b border-neutral-100 px-4 py-1.5">
 					<p className="text-xs text-neutral-400">
 						{document.page_count} page{document.page_count !== 1 ? "s" : ""}
 					</p>
 				</div>
-			</div>
+			)}
 
 			{/* PDF content */}
 			<div className="flex-1 overflow-y-auto p-4">
@@ -109,6 +156,7 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
 				)}
 
 				<PDFDocument
+					key={document.id}
 					file={pdfUrl}
 					onLoadSuccess={({ numPages: pages }) => {
 						setNumPages(pages);
