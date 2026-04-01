@@ -20,6 +20,11 @@ export async function fetchConversations(): Promise<Conversation[]> {
 	return handleResponse<Conversation[]>(res);
 }
 
+export async function searchConversations(q: string): Promise<Conversation[]> {
+	const res = await fetch(`${BASE}/conversations/search?q=${encodeURIComponent(q)}`);
+	return handleResponse<Conversation[]>(res);
+}
+
 export async function createConversation(): Promise<Conversation> {
 	const res = await fetch(`${BASE}/conversations`, {
 		method: "POST",

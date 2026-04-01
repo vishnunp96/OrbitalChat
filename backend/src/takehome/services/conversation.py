@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from takehome.db.models import Conversation
+from takehome.db.models import Conversation, Message
 
 
 async def create_conversation(session: AsyncSession) -> Conversation:
@@ -21,6 +21,20 @@ async def list_conversations(session: AsyncSession) -> list[Conversation]:
     stmt = (
         select(Conversation)
         .options(selectinload(Conversation.documents))
+        .order_by(Conversation.updated_at.desc())
+    )
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def search_conversations(session: AsyncSession, query: str) -> list[Conversation]:
+    """Return conversations that have at least one message containing the query string."""
+    stmt = (
+        select(Conversation)
+        .options(selectinload(Conversation.documents))
+        .join(Message, Message.conversation_id == Conversation.id)
+        .where(Message.content.ilike(f"%{query}%"))
+        .distinct()
         .order_by(Conversation.updated_at.desc())
     )
     result = await session.execute(stmt)

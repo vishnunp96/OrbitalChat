@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageSquarePlus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { MessageSquarePlus, Search, Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import * as api from "../lib/api";
 import { relativeTime } from "../lib/utils";
 import type { Conversation } from "../types";
 import { Button } from "./ui/button";
@@ -24,6 +25,32 @@ export function ChatSidebar({
 	onDelete,
 }: ChatSidebarProps) {
 	const [hoveredId, setHoveredId] = useState<string | null>(null);
+	const [query, setQuery] = useState("");
+	const [searchResults, setSearchResults] = useState<Conversation[] | null>(null);
+	const [searching, setSearching] = useState(false);
+	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useEffect(() => {
+		if (debounceRef.current) clearTimeout(debounceRef.current);
+		if (!query.trim()) {
+			setSearchResults(null);
+			return;
+		}
+		debounceRef.current = setTimeout(async () => {
+			setSearching(true);
+			try {
+				const results = await api.searchConversations(query.trim());
+				setSearchResults(results);
+			} finally {
+				setSearching(false);
+			}
+		}, 300);
+		return () => {
+			if (debounceRef.current) clearTimeout(debounceRef.current);
+		};
+	}, [query]);
+
+	const displayed = searchResults ?? conversations;
 
 	return (
 		<div className="flex h-full w-[250px] flex-shrink-0 flex-col border-r border-neutral-200 bg-white">
@@ -32,6 +59,24 @@ export function ChatSidebar({
 				<Button variant="ghost" size="icon" onClick={onCreate} title="New chat">
 					<MessageSquarePlus className="h-4 w-4" />
 				</Button>
+			</div>
+
+			<div className="border-b border-neutral-100 px-3 py-2">
+				<div className="flex items-center gap-2 rounded-md bg-neutral-100 px-2 py-1.5">
+					<Search className="h-3.5 w-3.5 flex-shrink-0 text-neutral-400" />
+					<input
+						type="text"
+						value={query}
+						onChange={(e) => setQuery(e.target.value)}
+						placeholder="Search conversations..."
+						className="min-w-0 flex-1 bg-transparent text-xs text-neutral-700 placeholder-neutral-400 outline-none"
+					/>
+					{query && (
+						<button type="button" onClick={() => setQuery("")}>
+							<X className="h-3.5 w-3.5 text-neutral-400 hover:text-neutral-600" />
+						</button>
+					)}
+				</div>
 			</div>
 
 			<ScrollArea className="flex-1">
@@ -47,14 +92,20 @@ export function ChatSidebar({
 						</div>
 					)}
 
-					{!loading && conversations.length === 0 && (
+					{!loading && !searching && displayed.length === 0 && (
 						<p className="px-2 py-8 text-center text-xs text-neutral-400">
-							No conversations yet
+							{query ? "No results found" : "No conversations yet"}
+						</p>
+					)}
+
+					{searching && (
+						<p className="px-2 py-4 text-center text-xs text-neutral-400">
+							Searching...
 						</p>
 					)}
 
 					<AnimatePresence initial={false}>
-						{conversations.map((conversation) => (
+						{displayed.map((conversation) => (
 							<motion.div
 								key={conversation.id}
 								initial={{ opacity: 0, height: 0 }}

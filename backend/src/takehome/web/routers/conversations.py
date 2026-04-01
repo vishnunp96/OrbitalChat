@@ -12,6 +12,7 @@ from takehome.services.conversation import (
     delete_conversation,
     get_conversation,
     list_conversations,
+    search_conversations,
     update_conversation,
 )
 
@@ -64,6 +65,25 @@ class ConversationUpdate(BaseModel):
 # --------------------------------------------------------------------------- #
 # Endpoints
 # --------------------------------------------------------------------------- #
+
+
+@router.get("/search", response_model=list[ConversationListItem])
+async def search_conversations_endpoint(
+    q: str,
+    session: AsyncSession = Depends(get_session),
+) -> list[ConversationListItem]:
+    """Search conversations by message content."""
+    conversations = await search_conversations(session, q)
+    return [
+        ConversationListItem(
+            id=c.id,
+            title=c.title,
+            created_at=c.created_at,
+            updated_at=c.updated_at,
+            has_document=len(c.documents) > 0,
+        )
+        for c in conversations
+    ]
 
 
 @router.get("", response_model=list[ConversationListItem])
