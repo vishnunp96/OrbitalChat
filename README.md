@@ -67,3 +67,6 @@ We've included sample legal documents in `sample-docs/` for testing.
 - `just db-shell` — Open a psql shell
 - `just shell-backend` — Shell into backend container
 - `just logs-backend` — Tail backend logs
+
+# LOOM VIDEO
+https://www.loom.com/share/a1914d1f0cc04661b72a3d847ebfc7b2
