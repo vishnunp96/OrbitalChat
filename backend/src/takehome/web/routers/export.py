@@ -25,7 +25,14 @@ def _safe_filename(title: str) -> str:
     return safe.strip().replace(" ", "_") or "conversation"
 
 
-def _add_paragraph(doc: DocxDocument, text: str, size: int, bold: bool = False, italic: bool = False, color: RGBColor | None = None) -> None:  # type: ignore[type-arg]
+def _add_paragraph(
+    doc: DocxDocument,
+    text: str,
+    size: int,
+    bold: bool = False,
+    italic: bool = False,
+    color: RGBColor | None = None,
+) -> None:  # type: ignore[type-arg]
     p = doc.add_paragraph()
     run = p.add_run(text)
     run.bold = bold
@@ -58,7 +65,9 @@ def _build_docx(
     # Documents reviewed
     if documents:
         doc.add_paragraph()
-        _add_paragraph(doc, "Documents Reviewed", size=11, bold=True, color=RGBColor(0x44, 0x44, 0x44))
+        _add_paragraph(
+            doc, "Documents Reviewed", size=11, bold=True, color=RGBColor(0x44, 0x44, 0x44)
+        )
         for filename, page_count in documents:
             p = doc.add_paragraph(style="List Bullet")
             p.add_run(filename)
@@ -79,7 +88,9 @@ def _build_docx(
         if msg.role == "user":
             _add_paragraph(doc, "You", size=10, bold=True, color=RGBColor(0x44, 0x44, 0x44))
         else:
-            _add_paragraph(doc, "AI Assistant", size=10, bold=True, color=RGBColor(0x0D, 0x6E, 0x4E))
+            _add_paragraph(
+                doc, "AI Assistant", size=10, bold=True, color=RGBColor(0x0D, 0x6E, 0x4E)
+            )
 
         # Body — add_paragraph with text directly; safe even for empty strings
         body = doc.add_paragraph()

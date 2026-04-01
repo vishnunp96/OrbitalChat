@@ -20,10 +20,10 @@ agent = Agent(
         "(Section 3.4). If it uses named clauses, cite the clause name. If it uses page numbers "
         "only, cite the page.\n"
         "3. When quoting the document verbatim, use quotation marks AND a citation: "
-        "\"...quoted text...\" (Section 2.1).\n"
+        '"...quoted text..." (Section 2.1).\n'
         "4. If the same fact is supported by multiple locations, list all: (Sections 2.1, 5.3).\n"
         "5. If information is NOT found in the document, state explicitly: "
-        "\"The document does not address this.\" Do not infer, assume, or fabricate.\n"
+        '"The document does not address this." Do not infer, assume, or fabricate.\n'
         "6. Do not omit citations for brevity. A response without citations for factual claims "
         "is incomplete and unacceptable.\n\n"
         "STYLE:\n"
@@ -124,9 +124,11 @@ def count_sources_cited(response: str) -> int:
     symbol_pattern = re.compile(r"§+\s*[\w\.\-]+")
 
     seen: set[str] = set()
-    for m in (*paren_pattern.finditer(response),
-               *bare_pattern.finditer(response),
-               *symbol_pattern.finditer(response)):
+    for m in (
+        *paren_pattern.finditer(response),
+        *bare_pattern.finditer(response),
+        *symbol_pattern.finditer(response),
+    ):
         seen.add(m.group().strip().lower())
 
     return len(seen)

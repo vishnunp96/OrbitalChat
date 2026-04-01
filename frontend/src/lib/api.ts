@@ -86,7 +86,9 @@ export function getDocumentUrl(documentId: string): string {
 	return `${BASE}/documents/${documentId}/content`;
 }
 
-export async function exportConversation(conversationId: string): Promise<void> {
+export async function exportConversation(
+	conversationId: string,
+): Promise<void> {
 	const res = await fetch(`${BASE}/conversations/${conversationId}/export`);
 	if (!res.ok) {
 		const text = await res.text().catch(() => "Unknown error");

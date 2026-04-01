@@ -48,7 +48,9 @@ export function ChatWindow({
 		}
 	}, [messagesLength, streamingContent]);
 
-	const exportErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const exportErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+		null,
+	);
 
 	const handleExport = useCallback(async () => {
 		if (!conversationId || exporting) return;
