@@ -62,18 +62,34 @@ export function ChatSidebar({
 								exit={{ opacity: 0, height: 0 }}
 								transition={{ duration: 0.15 }}
 							>
-								<button
-									type="button"
-									className={`group flex w-full items-center rounded-lg px-3 py-2.5 text-left transition-colors ${
+								<div
+									role="button"
+									tabIndex={0}
+									className={`relative flex w-full cursor-pointer items-center rounded-lg px-3 py-2.5 text-left transition-colors ${
 										selectedId === conversation.id
 											? "bg-neutral-100"
 											: "hover:bg-neutral-50"
 									}`}
 									onClick={() => onSelect(conversation.id)}
+									onKeyDown={(e) => e.key === "Enter" && onSelect(conversation.id)}
 									onMouseEnter={() => setHoveredId(conversation.id)}
 									onMouseLeave={() => setHoveredId(null)}
 								>
-									<div className="min-w-0 flex-1 overflow-hidden">
+									{hoveredId === conversation.id && (
+										<button
+											type="button"
+											className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-red-500"
+											onClick={(e) => {
+												e.stopPropagation();
+												onDelete(conversation.id);
+											}}
+											title="Delete conversation"
+										>
+											<Trash2 className="h-3.5 w-3.5" />
+										</button>
+									)}
+
+									<div className={`min-w-0 flex-1 overflow-hidden transition-opacity ${hoveredId === conversation.id ? "opacity-20" : "opacity-100"}`}>
 										<p className="truncate text-sm font-medium text-neutral-800">
 											{conversation.title}
 										</p>
@@ -81,23 +97,7 @@ export function ChatSidebar({
 											{relativeTime(conversation.updated_at)}
 										</p>
 									</div>
-
-									<div className="ml-2 w-6 flex-shrink-0">
-										{hoveredId === conversation.id && (
-											<button
-												type="button"
-												className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-red-500"
-												onClick={(e) => {
-													e.stopPropagation();
-													onDelete(conversation.id);
-												}}
-												title="Delete conversation"
-											>
-												<Trash2 className="h-3.5 w-3.5" />
-											</button>
-										)}
-									</div>
-								</button>
+								</div>
 							</motion.div>
 						))}
 					</AnimatePresence>
