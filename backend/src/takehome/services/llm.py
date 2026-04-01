@@ -35,16 +35,19 @@ agent = Agent(
 
 
 async def generate_title(user_message: str) -> str:
-    """Generate a 3-5 word conversation title from the first user message."""
+    """Generate a ≤5-word conversation title from the first user message."""
     result = await agent.run(
-        f"Generate a concise 3-5 word title for a conversation that starts with: '{user_message}'. "
-        "Return only the title, nothing else."
+        "Generate a conversation title of AT MOST 5 words that captures the topic of this message. "
+        "Rules: no punctuation at the end, no quotes, title case, 5 words maximum. "
+        "Return only the title, nothing else.\n\n"
+        f"Message: {user_message}"
     )
-    title = str(result.output).strip().strip('"').strip("'")
-    # Truncate if too long
-    if len(title) > 100:
-        title = title[:97] + "..."
-    return title
+    title = str(result.output).strip().strip('"').strip("'").rstrip(".")
+    # Hard-enforce 5-word limit in case the model ignores the instruction
+    words = title.split()
+    if len(words) > 5:
+        title = " ".join(words[:5])
+    return title or "New Conversation"
 
 
 async def chat_with_document(
