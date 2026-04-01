@@ -114,7 +114,11 @@ export default function App() {
 					onClearContext={handleClearContext}
 				/>
 
-				<DocumentViewer documents={documents} onAddContext={handleAddContext} onDeleteDocument={removeDocument} />
+				<DocumentViewer
+					documents={documents}
+					onAddContext={handleAddContext}
+					onDeleteDocument={removeDocument}
+				/>
 			</div>
 		</TooltipProvider>
 	);

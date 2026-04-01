@@ -5,7 +5,6 @@ import * as api from "../lib/api";
 import { relativeTime } from "../lib/utils";
 import type { Conversation } from "../types";
 import { Button } from "./ui/button";
-import { ScrollArea } from "./ui/scroll-area";
 
 interface ChatSidebarProps {
 	conversations: Conversation[];
@@ -26,7 +25,9 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
 	const [hoveredId, setHoveredId] = useState<string | null>(null);
 	const [query, setQuery] = useState("");
-	const [searchResults, setSearchResults] = useState<Conversation[] | null>(null);
+	const [searchResults, setSearchResults] = useState<Conversation[] | null>(
+		null,
+	);
 	const [searching, setSearching] = useState(false);
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -34,7 +35,7 @@ export function ChatSidebar({
 		if (debounceRef.current) clearTimeout(debounceRef.current);
 		if (!query.trim()) {
 			setSearchResults(null);
-			return;
+			return () => {};
 		}
 		debounceRef.current = setTimeout(async () => {
 			setSearching(true);
@@ -53,7 +54,7 @@ export function ChatSidebar({
 	const displayed = searchResults ?? conversations;
 
 	return (
-		<div className="flex h-full w-[250px] flex-shrink-0 flex-col border-r border-neutral-200 bg-white">
+		<div className="flex h-full w-[250px] flex-shrink-0 flex-col overflow-hidden border-r border-neutral-200 bg-white">
 			<div className="flex items-center justify-between border-b border-neutral-100 p-3">
 				<span className="text-sm font-semibold text-neutral-700">Chats</span>
 				<Button variant="ghost" size="icon" onClick={onCreate} title="New chat">
@@ -79,8 +80,8 @@ export function ChatSidebar({
 				</div>
 			</div>
 
-			<ScrollArea className="flex-1">
-				<div className="p-2">
+			<div className="flex-1 overflow-y-auto overflow-x-hidden">
+				<div className="w-full p-2">
 					{loading && conversations.length === 0 && (
 						<div className="space-y-2 p-2">
 							{[1, 2, 3].map((i) => (
@@ -122,7 +123,9 @@ export function ChatSidebar({
 											: "hover:bg-neutral-50"
 									}`}
 									onClick={() => onSelect(conversation.id)}
-									onKeyDown={(e) => e.key === "Enter" && onSelect(conversation.id)}
+									onKeyDown={(e) =>
+										e.key === "Enter" && onSelect(conversation.id)
+									}
 									onMouseEnter={() => setHoveredId(conversation.id)}
 									onMouseLeave={() => setHoveredId(null)}
 								>
@@ -140,7 +143,9 @@ export function ChatSidebar({
 										</button>
 									)}
 
-									<div className={`min-w-0 flex-1 overflow-hidden transition-opacity ${hoveredId === conversation.id ? "opacity-20" : "opacity-100"}`}>
+									<div
+										className={`min-w-0 flex-1 overflow-hidden transition-opacity ${hoveredId === conversation.id ? "opacity-20" : "opacity-100"}`}
+									>
 										<p className="truncate text-sm font-medium text-neutral-800">
 											{conversation.title}
 										</p>
@@ -153,7 +158,7 @@ export function ChatSidebar({
 						))}
 					</AnimatePresence>
 				</div>
-			</ScrollArea>
+			</div>
 		</div>
 	);
 }

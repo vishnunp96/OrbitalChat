@@ -21,7 +21,9 @@ export async function fetchConversations(): Promise<Conversation[]> {
 }
 
 export async function searchConversations(q: string): Promise<Conversation[]> {
-	const res = await fetch(`${BASE}/conversations/search?q=${encodeURIComponent(q)}`);
+	const res = await fetch(
+		`${BASE}/conversations/search?q=${encodeURIComponent(q)}`,
+	);
 	return handleResponse<Conversation[]>(res);
 }
 

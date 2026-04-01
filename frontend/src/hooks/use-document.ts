@@ -52,7 +52,9 @@ export function useDocument(conversationId: string | null) {
 			await api.deleteDocument(documentId);
 			setDocuments((prev) => prev.filter((d) => d.id !== documentId));
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to delete document");
+			setError(
+				err instanceof Error ? err.message : "Failed to delete document",
+			);
 		}
 	}, []);
 
