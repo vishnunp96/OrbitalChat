@@ -39,6 +39,7 @@ async def generate_title(user_message: str) -> str:
     result = await agent.run(
         "Generate a conversation title of AT MOST 5 words that captures the topic of this message. "
         "Rules: no punctuation at the end, no quotes, title case, 5 words maximum. "
+        "Bias the summary towards the attached document names and legal questions asked."
         "Return only the title, nothing else.\n\n"
         f"Message: {user_message}"
     )
