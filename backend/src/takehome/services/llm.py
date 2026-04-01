@@ -97,14 +97,36 @@ async def chat_with_document(
 
 
 def count_sources_cited(response: str) -> int:
-    """Count the number of references to document sections, clauses, pages, etc."""
-    patterns = [
-        r"section\s+\d+",
-        r"clause\s+\d+",
-        r"page\s+\d+",
-        r"paragraph\s+\d+",
-    ]
-    count = 0
-    for pattern in patterns:
-        count += len(re.findall(pattern, response, re.IGNORECASE))
-    return count
+    """Count distinct inline citations to document sections, clauses, pages, etc.
+
+    Matches parenthetical citations such as:
+      (Section 4.2), (Clause 7.1), (Page 12), (Article III),
+      (Schedule A), (Exhibit B), (Appendix C), (Annex 1),
+      (Sections 2.1, 5.3)  — counted as one citation group
+    Also matches bare references outside parentheses, e.g. "Section 4.2 provides..."
+    De-duplicates identical citation strings so repeated references to the same
+    location are counted only once.
+    """
+    # Parenthetical citations: (Section/Clause/Page/Article/Schedule/Exhibit/… identifier)
+    paren_pattern = re.compile(
+        r"\(\s*(?:sections?|clauses?|pages?|articles?|paragraphs?|schedules?|"
+        r"exhibits?|appendix|appendices|annexes?|parts?|sub-?sections?)\s+[^\)]+\)",
+        re.IGNORECASE,
+    )
+    # Bare references: "Section 4.2", "Clause 7", "Article III", "Schedule A", etc.
+    bare_pattern = re.compile(
+        r"\b(?:sections?|clauses?|pages?|articles?|paragraphs?|schedules?|"
+        r"exhibits?|appendix|appendices|annexes?|parts?|sub-?sections?)\s+"
+        r"[\w\.\-]+",
+        re.IGNORECASE,
+    )
+    # Section symbol: § 4.2
+    symbol_pattern = re.compile(r"§+\s*[\w\.\-]+")
+
+    seen: set[str] = set()
+    for m in (*paren_pattern.finditer(response),
+               *bare_pattern.finditer(response),
+               *symbol_pattern.finditer(response)):
+        seen.add(m.group().strip().lower())
+
+    return len(seen)
