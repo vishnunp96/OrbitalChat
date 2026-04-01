@@ -117,6 +117,7 @@ export function ChatSidebar({
 								<div
 									role="button"
 									tabIndex={0}
+									title={conversation.title}
 									className={`relative flex w-full cursor-pointer items-center rounded-lg px-3 py-2.5 text-left transition-colors ${
 										selectedId === conversation.id
 											? "bg-neutral-100"
