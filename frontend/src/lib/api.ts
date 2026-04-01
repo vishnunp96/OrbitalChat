@@ -34,6 +34,14 @@ export async function createConversation(): Promise<Conversation> {
 	return handleResponse<Conversation>(res);
 }
 
+export async function deleteDocument(id: string): Promise<void> {
+	const res = await fetch(`${BASE}/documents/${id}`, { method: "DELETE" });
+	if (!res.ok) {
+		const text = await res.text().catch(() => "Unknown error");
+		throw new Error(`API error ${res.status}: ${text}`);
+	}
+}
+
 export async function deleteConversation(id: string): Promise<void> {
 	const res = await fetch(`${BASE}/conversations/${id}`, {
 		method: "DELETE",

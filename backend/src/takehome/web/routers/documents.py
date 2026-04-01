@@ -11,7 +11,7 @@ from starlette.responses import FileResponse
 
 from takehome.db.session import get_session
 from takehome.services.conversation import get_conversation
-from takehome.services.document import get_document, upload_document
+from takehome.services.document import delete_document, get_document, upload_document
 
 logger = structlog.get_logger()
 
@@ -73,6 +73,17 @@ async def upload_document_endpoint(
         page_count=document.page_count,
         uploaded_at=document.uploaded_at,
     )
+
+
+@router.delete("/api/documents/{document_id}", status_code=204)
+async def delete_document_endpoint(
+    document_id: str,
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Delete a document and its file on disk."""
+    deleted = await delete_document(session, document_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Document not found")
 
 
 @router.get("/api/documents/{document_id}/content")

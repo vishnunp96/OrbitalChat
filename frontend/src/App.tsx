@@ -31,6 +31,7 @@ export default function App() {
 	const {
 		documents,
 		upload,
+		remove: removeDocument,
 		refresh: refreshDocument,
 	} = useDocument(selectedId);
 
@@ -113,7 +114,7 @@ export default function App() {
 					onClearContext={handleClearContext}
 				/>
 
-				<DocumentViewer documents={documents} onAddContext={handleAddContext} />
+				<DocumentViewer documents={documents} onAddContext={handleAddContext} onDeleteDocument={removeDocument} />
 			</div>
 		</TooltipProvider>
 	);

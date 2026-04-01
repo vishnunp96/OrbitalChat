@@ -28,11 +28,13 @@ const HIGHLIGHT_CURRENT_COLOR = "rgba(251, 146, 60, 0.7)"; // orange
 interface DocumentViewerProps {
 	documents: Document[];
 	onAddContext?: (snippet: Omit<ContextSnippet, "id">) => void;
+	onDeleteDocument?: (id: string) => void;
 }
 
 export function DocumentViewer({
 	documents,
 	onAddContext,
+	onDeleteDocument,
 }: DocumentViewerProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [numPages, setNumPages] = useState<number>(0);
@@ -325,26 +327,57 @@ export function DocumentViewer({
 				{documents.length > 1 ? (
 					<div className="flex gap-1">
 						{documents.map((doc, i) => (
-							<button
+							<div
 								key={doc.id}
-								type="button"
-								onClick={() => setSelectedIndex(i)}
-								className={`min-w-0 flex-1 rounded-t-md border border-b-0 px-3 py-1.5 text-xs font-medium transition-colors ${
+								className={`group relative min-w-0 flex-1 rounded-t-md border border-b-0 transition-colors ${
 									i === selectedIndex
-										? "border-neutral-200 bg-white text-neutral-800"
-										: "border-transparent bg-neutral-100 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700"
+										? "border-neutral-200 bg-white"
+										: "border-transparent bg-neutral-100 hover:bg-neutral-200"
 								}`}
-								title={doc.filename}
 							>
-								<span className="truncate block">{doc.filename}</span>
-							</button>
+								<button
+									type="button"
+									onClick={() => setSelectedIndex(i)}
+									className={`w-full px-3 py-1.5 pr-6 text-xs font-medium ${
+										i === selectedIndex
+											? "text-neutral-800"
+											: "text-neutral-500 hover:text-neutral-700"
+									}`}
+									title={doc.filename}
+								>
+									<span className="truncate block">{doc.filename}</span>
+								</button>
+								{onDeleteDocument && (
+									<button
+										type="button"
+										onClick={(e) => {
+											e.stopPropagation();
+											onDeleteDocument(doc.id);
+										}}
+										className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-neutral-400 opacity-0 hover:bg-neutral-200 hover:text-red-500 group-hover:opacity-100"
+										title="Remove document"
+									>
+										<X className="h-3 w-3" />
+									</button>
+								)}
+							</div>
 						))}
 					</div>
 				) : (
-					<div className="pb-2">
+					<div className="flex items-center justify-between pb-2">
 						<p className="truncate text-sm font-medium text-neutral-800">
 							{document.filename}
 						</p>
+						{onDeleteDocument && (
+							<button
+								type="button"
+								onClick={() => onDeleteDocument(document.id)}
+								className="ml-2 flex-shrink-0 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-red-500"
+								title="Remove document"
+							>
+								<X className="h-3.5 w-3.5" />
+							</button>
+						)}
 					</div>
 				)}
 			</div>

@@ -100,6 +100,19 @@ async def get_document(session: AsyncSession, document_id: str) -> Document | No
     return result.scalar_one_or_none()
 
 
+async def delete_document(session: AsyncSession, document_id: str) -> bool:
+    """Delete a document record and its file on disk. Returns True if it existed."""
+    document = await get_document(session, document_id)
+    if document is None:
+        return False
+    file_path = document.file_path
+    await session.delete(document)
+    await session.commit()
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    return True
+
+
 async def get_document_for_conversation(
     session: AsyncSession, conversation_id: str
 ) -> Document | None:

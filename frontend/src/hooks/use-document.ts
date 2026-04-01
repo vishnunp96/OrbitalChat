@@ -46,11 +46,22 @@ export function useDocument(conversationId: string | null) {
 		[conversationId],
 	);
 
+	const remove = useCallback(async (documentId: string) => {
+		try {
+			setError(null);
+			await api.deleteDocument(documentId);
+			setDocuments((prev) => prev.filter((d) => d.id !== documentId));
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Failed to delete document");
+		}
+	}, []);
+
 	return {
 		documents,
 		uploading,
 		error,
 		upload,
+		remove,
 		refresh,
 	};
 }
